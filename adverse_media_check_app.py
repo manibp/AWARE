@@ -13,6 +13,7 @@ import logging
 import asyncio
 import cachetools
 import random, string
+from google.oauth2 import service_account
 logging.basicConfig()
 logging.getLogger().setLevel(logging.INFO)
 cache = cachetools.LRUCache(maxsize=128)
@@ -21,6 +22,8 @@ from dotenv import load_dotenv
 load_dotenv()
 chunk_size = 100
 id =''.join(random.choices(string.ascii_uppercase +string.digits, k=10))
+credentials = service_account.Credentials.from_service_account_info(st.secrets["gcs_credentials"])
+
 
 
 # API tokens
@@ -156,7 +159,7 @@ def translate_text(target: str, text: str) -> dict:
     Target must be an ISO 639-1 language code.
     See https://g.co/cloud/translate/v2/translate-reference#supported_languages
     """
-    translate_client = translate.Client()
+    translate_client = translate.Client(credentials=credentials)
 
     if isinstance(text, bytes):
         text = text.decode("utf-8")

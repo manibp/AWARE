@@ -16,3 +16,16 @@
  Run Id: LJDV0YM5K4. Time elapsed for ingest_data is 24.20609402656555 
  Run Id: LJDV0YM5K4. Time elapsed for perform_semantic_search is 1.0061650276184082 
  Run Id: LJDV0YM5K4. Time elapsed for wrapper_semantic_search is 1.0065970420837402 
+ Run Id: 55CFVSEWQD. Time elapsed for translate_text is 0.40669989585876465 
+ Run Id: 55CFVSEWQD. Time elapsed for text_translation is 0.4120640754699707 
+ Run Id: 55CFVSEWQD. Time elapsed for call_search_func_asyncly is 9.5367431640625e-07 
+ Run Id: 55CFVSEWQD. Time elapsed for perform_web_search is 2.1457672119140625e-06 
+ Run Id: 55CFVSEWQD. Time elapsed for cached_web_search is 0.002663850784301758 
+ Run Id: 55CFVSEWQD. Time elapsed for web_search_func is 28.875189065933228 
+ Run Id: 55CFVSEWQD. Time elapsed for process_search_results is 28.894020080566406 
+ Run Id: 55CFVSEWQD. Time elapsed for create_dstore_index is 1.886132001876831 
+ Run Id: 55CFVSEWQD. Time elapsed for database_index is 1.8896939754486084 
+ Run Id: 55CFVSEWQD. Time elapsed for load_data_in_chunks is 1.6689300537109375e-06 
+ Run Id: 55CFVSEWQD. Time elapsed for ingest_data is 20.25191020965576 
+ Run Id: 55CFVSEWQD. Time elapsed for perform_semantic_search is 0.8621811866760254 
+ Run Id: 55CFVSEWQD. Time elapsed for wrapper_semantic_search is 0.86244797706604 
