@@ -13,6 +13,7 @@ import logging
 import asyncio
 import cachetools
 import random, string
+import sys
 from google.oauth2 import service_account
 logging.basicConfig()
 logging.getLogger().setLevel(logging.INFO)
@@ -60,15 +61,19 @@ class WebSearchAPI:
         results = actor.last_run().dataset().list_items().items
 
         cleaned_results = dict()
-        for collection in results[0]['organicResults']:       
-            for key, value in collection.items():
-                if key in ('title', 'description', 'url'):
-                    if key not in cleaned_results:
-                        cleaned_results[key] = [value]
-                    else:
-                        cleaned_results[key].append(value)
+        if results[0]['organicResults']:
+            for collection in results[0]['organicResults']:       
+                for key, value in collection.items():
+                    if key in ('title', 'description', 'url'):
+                        if key not in cleaned_results:
+                            cleaned_results[key] = [value]
+                        else:
+                            cleaned_results[key].append(value)
 
-        return cleaned_results
+            return cleaned_results
+        else:
+            logging.info("No Search results found for the input query")
+            return cleaned_results
     
     # Input for the actor
     @staticmethod
@@ -87,6 +92,7 @@ class WebSearchAPI:
             "saveHtmlToKeyValueStore": False
         }
     
+
 
 class Datastore:
 
@@ -163,10 +169,11 @@ def translate_text(target: str, text: str) -> dict:
 
     if isinstance(text, bytes):
         text = text.decode("utf-8")
+        
 
     # Text can also be a sequence of strings, in which case this method
     # will return a sequence of results for each text.
-    result = translate_client.translate(text, target_language=target)
+    result = translate_client.translate(text, target_language=target, format_='text')
 
     print("Text: {}".format(result["input"]))
     print("Translation: {}".format(result["translatedText"]))
@@ -178,9 +185,14 @@ def translate_text(target: str, text: str) -> dict:
 # Function to perform a semantic search
 @time_deco(id)
 def perform_semantic_search(db_index, search_query, model, top_k=100, score_thresh =None):
-    query_vector = encode_text(search_query, model).tolist()
-    response = db_index.query(query_vector, top_k=top_k, include_metadata= True)
-
+    
+    logging.info(search_query)
+    original_response =[]
+    for query in search_query:
+        logging.info(query)
+        query_vector = encode_text(query, model).tolist()
+        response =db_index.query(query_vector, top_k=top_k, include_metadata= True)
+        original_response.append(response)
     if score_thresh is not None:
         response = [item for item in response['matches'] if item.score > score_thresh]
 
@@ -190,13 +202,20 @@ def perform_semantic_search(db_index, search_query, model, top_k=100, score_thre
             refined_response.append(dict(item['metadata'].items()|{'score':item['score']}.items()))
     return refined_response
 
+def search_query_preparation(name, location = None, other_keywords =None):
 
+    p1 = f'News on "{name}" related to Money laundering, fraud or corruption charges'
+    p2 = f'Criminal cases on "{name}" { "in "+location if location is not None else ""}'
+    p3 = f'"{name}" involvment in illegal activities { ": "+other_keywords if other_keywords is not None else ""}'
+    p4 = f'Adverse media about "{name}" for alleged crimes { "in "+location if location else ""}'
+    search_prompts =[p1, p2, p3,p4]
+    return search_prompts
 
 # Streamlit app
 if __name__ == "__main__":
 
-    st.set_page_config(page_title="Adverse Media Assesment Tool", layout="wide")
-    st.title("Adverse Media Assesment Tool")
+    st.set_page_config(page_title="AWARE: Adverse Media Assesment and Reporting Engine", layout="wide")
+    st.title("AWARE: Adverse Media Assesment and Reporting Engine")
     with open('./language_dict.json', 'r') as f:
         lang_dict =json.loads(f.read())
         inv_lang_dict = {v: k for k, v in lang_dict.items()}
@@ -220,35 +239,51 @@ if __name__ == "__main__":
     index_name = "search-query-index"
     top_k = 100
     score_thresh = 0.5
-
+    chunk_size = 50
     with st.sidebar:
         # st.title("Settings",)
-        st.markdown("<h1 style='text-align: center; font-size: 30px;'>Tool Configuration</h1>", unsafe_allow_html=True)
+        st.markdown("<h1 style='text-align: center; font-size: 25px;'>Tool Config</h1>", unsafe_allow_html=True)
         st.markdown(" **Web Search Configuration:**  ", unsafe_allow_html=False,)
         input_country =st.selectbox("Country", country_list, index=default_ctry_idx, help="Specifies the country of the IP address used for the search and the Google Search domain (e.g. google.es for Spain). By default, the actor uses United States (google.com).")
         input_language =st.multiselect("Language", lang_list, default=['English'], help= "Language for the search results, which is passed to Google Search as the hl URL query parameter. Only set this if you want to use a non-default language for the selected country.")
-        st.markdown(" **Datastore Configuration:**  ", unsafe_allow_html=False,)
-        chunk_size = st.slider("Chunk Size", 0, 200, 20,step=10, help= "Loads results to datastore in chunks of specified size")
+        # st.markdown(" **Datastore Configuration:**  ", unsafe_allow_html=False,)
+        # chunk_size = st.slider("Chunk Size", 0, 200, 20,step=10, help= "Loads results to datastore in chunks of specified size")
         st.markdown(" **Similarity Search Configuration:**  ", unsafe_allow_html=False, help= "Only return the web search results that pass the criteria")
-        score_thresh = st.slider("Similarity Score Threshold", 0.0, 1.0, 0.5, step=0.1)
-        st.sidebar.markdown("Models used in this app: Sentence Transformer (all-MiniLM-L6-v2)")
+        score_thresh = st.slider("Similarity Score Threshold", 0.0, 1.0, 0.6, step=0.05)   
+        st.sidebar.markdown("LLM used in this app: Sentence Transformer (all-MiniLM-L6-v2)")
         
     logging.info(f"Country Code : {input_country }, Language : {input_language}, Chunk Size : {chunk_size}")# , Index Status: {index_status}")
-    search_query = st.text_area("Search Query")
-
-    # def reset():
-    #     st.session_state.index_state = False
+    col1,col2 = st.columns(2)
+    inp_name =col1.text_input(label='Individual Name', placeholder='Name of the individual without quotes to search. Example: Donald Trump and not "Donald Trump" ',
+                              help= 'If specified, performs web search based on pre-defined set of queries')
+    inp_location = col2.text_input(label='Location (Optional)', placeholder='Location of the individual. For instance country of birth, residence city, etc. Example: Florida',
+                                   help= 'If specified, incorporates location into pre-deined queries')
+    inp_additional_text = st.text_input(label='Additional keywords (Optional)', placeholder='Additional keywords. Example: scandals, drug mafia ..  ')
+    st.markdown(" **OR** ", unsafe_allow_html=False)
+    custom_query = st.text_area("Custom Search Query", placeholder="Performs web search based on user specified query!!",
+                                help= "If specified together with Individual name, search is performed with both user specified query and pre-defined queries, otherwise performs search only with user specified query ")
 
     if st.button("Search"):
         
         # print("After clicking Button:", index_status)
-        if not search_query:
-            st.warning("Please provide Search Query.")
+        if not inp_name and not custom_query:
+            st.warning("Please provide Search Query or Individual name.")
         else:
             with st.spinner('Performing Multi Lingual Search...'):
                 st.header("Search Results")
                 start_time = time.time()
-                
+
+                ## Preparing list of queries to perform search
+                if inp_name and custom_query:
+                    standard_queries =search_query_preparation(inp_name,inp_location,inp_additional_text)
+                    standard_queries.append(custom_query)
+                    search_query =standard_queries
+                elif inp_name:
+                    search_query =search_query_preparation(inp_name,inp_location,inp_additional_text)
+                else:
+                    search_query = [custom_query]
+                logging.info(search_query)
+
                 ## Preparing list of languages to perform search
                 @st.cache_data
                 def search_languages(in_country, in_language):
@@ -287,9 +322,9 @@ if __name__ == "__main__":
                 @st.cache_data
                 def text_translation(languages, search_query):
                     translated_text =[]
-                    for lang in languages:
-                        # lang_code =lang_dict[lang]
-                        translated_text.append((lang, translate_text(lang, search_query)))
+                    for query in search_query:
+                        for lang in languages:
+                            translated_text.append((lang, translate_text(lang, query.lower())))
                     return translated_text
 
                 translated_query_lang_pair = text_translation(search_langs, search_query)
@@ -297,7 +332,7 @@ if __name__ == "__main__":
 
                 with st.expander('Search Queries'):
                     languages, queries = zip(*translated_query_lang_pair)
-                    st.write(f"Searching in langugages: {[inv_lang_dict[lang] for lang in languages]} ")
+                    st.write(f"Searching in langugages: {list(set([inv_lang_dict[lang] for lang in languages]))} ")
                     st.write(f"Issued Queries: {[query for query in queries]} ")
                     
 
@@ -339,14 +374,15 @@ if __name__ == "__main__":
                 @st.cache_data
                 def process_search_results(country, search_queries):
                     search_results = asyncio.run(call_search_func_asyncly(country, search_queries))
-                    if len(search_results) > 0:
+                    if any(search_results): # Will evaluate to false, if all values are None
                         search_results_dict = defaultdict(list)
-                        # search_results_dict = dict()
                         for item in search_results:
-                            for key, value in item.items():
-                                search_results_dict[key].extend(value)
+                            if item is not None:
+                                for key, value in item.items():
+                                    search_results_dict[key].extend(value)
                     else:
                         st.warning("No results found.")
+                        sys.exit("No results found")
 
                     search_results_df =pd.DataFrame(dict(search_results_dict)).drop_duplicates(subset = ['url'])
                     return search_results_df
