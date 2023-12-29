@@ -216,19 +216,22 @@ if __name__ == "__main__":
 
     st.set_page_config(page_title="AWARE: Adverse Media Assesment and Reporting Engine", layout="wide")
     st.title("AWARE: Adverse Media Assesment and Reporting Engine")
-    with open('./language_dict.json', 'r') as f:
+
+    parent_path = os.path.split(os.path.realpath('./'))[0]
+
+    with open(f'{parent_path}/data/language_dict.json', 'r') as f:
         lang_dict =json.loads(f.read())
         inv_lang_dict = {v: k for k, v in lang_dict.items()}
     lang_list = list(lang_dict.keys())
     default_lang_idx = lang_list.index('English')
 
-    with open('./country_dict.json', 'r') as f:
+    with open(f'{parent_path}/data/country_dict.json', 'r') as f:
         country_dict =json.loads(f.read())
         country_list = list(country_dict.keys())
         default_ctry_idx = country_list.index('United States')
         logging.info(default_ctry_idx)
 
-    with open('./country_lang_mapping.json', 'r') as f:
+    with open(f'{parent_path}/data/country_lang_mapping.json', 'r') as f:
         ctry_lang_map_dict = json.loads(f.read())
     
     
