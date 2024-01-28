@@ -10,8 +10,7 @@ AWARE is a powerful streamlit application designed for efficient reporting of ad
 - **Pinecone Integration:** Utilizes a large language model (LLM) for vector embeddings stored in Pinecone Vector database.
 - **Query Rewriting:** Refines search accuracy by rephrasing search queries with custom prompts in an interrogative manner using GPT-4, ensuring precise retrieval of relevant information.
 - **Similarity Scoring:** Computes similarity scores between the input query and search results using hybrid search that combines both lexical and vector search.
-- **Streamlit Interface:** Interactive frontend applications to perform search.
-- **Chat Assistant:** Engages in natural language conversations with your data using the AI Assistant built on LlamaIndex ChatEngine
+- **Streamlit Chat Interface:** Engages in natural language conversations with your data using the AI Assistant built on LlamaIndex ChatEngine
 
 ## Repository Structure
 
