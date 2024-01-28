@@ -6,14 +6,12 @@ AWARE is a powerful streamlit application designed for efficient reporting of ad
 ## Key Features
 
 - **Multilingual Search:** Translates the input query to different languages based on the web search country domain.
-- **Apify Integration:** Performs a multilingual search using the Apify API to retrieve results from various sources.
+- **Apify Integration:** Performs asynchronous multilingual search using the Apify API to retrieve results from various sources.
 - **Pinecone Integration:** Utilizes a large language model (LLM) for vector embeddings stored in Pinecone Vector database.
-- **Similarity Scoring:** Calculates similarity scores between the input query and search results using semantic search.
-- **Streamlit Interface:** Interactive user interface hosted on Streamlit public cloud.
-
-## Application URL
-
-Visit the AWARE application hosted on Streamlit public cloud: [AWARE App](https://adversemediacheck.streamlit.app/#aware-adverse-media-assessment-and-reporting-engine)
+- **Query Rewriting:** Refines search accuracy by rephrasing search queries with custom prompts in an interrogative manner using GPT-4, ensuring precise retrieval of relevant information.
+- **Similarity Scoring:** Computes similarity scores between the input query and search results using hybrid search that combines both lexical and vector search.
+- **Streamlit Interface:** Interactive frontend applications to perform search.
+- **Chat Assistant:** Engages in natural language conversations with your data using the AI Assistant built on LlamaIndex ChatEngine
 
 ## Repository Structure
 
@@ -29,11 +27,15 @@ Visit the AWARE application hosted on Streamlit public cloud: [AWARE App](https:
    cd AWARE
 2. Install Dependencies
    pip install -r requirements.txt
-3. Run Streamlit Application
-   streamlit run src/app.py
+3. Set API keys of following services as Environment variables
+   - OpenAI, Huggingface, Pinecone, Apify, Google Translation Credentials
+5. Navigate to src folder and run Streamlit Application
+   python3 -m streamlit run app.py
 
 
 Snapshot of Streamlit App. 
-<img width="1220" alt="image" src="https://github.com/manibp/AWARE/assets/14993216/3049db40-5dad-4b61-bd5d-9416966b2e42">
+<img width="1512" alt="image" src="https://github.com/manibp/AWARE-v1/assets/14993216/8192857d-ec94-405e-9135-460a48950ced">
+
+<img width="1512" alt="image" src="https://github.com/manibp/AWARE-v1/assets/14993216/d1e0ec4a-b6c5-4d17-aee0-c1eee4fd7b7d">
 
 
