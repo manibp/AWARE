@@ -1,0 +1,36 @@
+#Package Overview
+package_name: aware
+
+# Data files:
+country_dict: "country_dict.json"
+language_dict: "language_dict.json"
+ctry_lang_map: "country_lang_mapping.json"
+
+# Variables
+country: "United States"
+languages: 
+    - "English"
+    # - "Hindi"
+ss_threshold: 0.6
+name: "Mani Babu"
+location: "India"
+add_keywords: "Fraud"
+custom_search_query: "Martin luther king illegal activities"
+pinecone_index: "search-index"
+embed_model_name: "BAAI/bge-base-en-v1.5"
+embed_model_dims: 768
+generative_model_name: "TinyLlama/TinyLlama-1.1B-Chat-v1.0"
+chunk_size: 10
+#OpenAI model params
+llm: "OpenAI"
+model: "gpt-3.5-turbo-instruct"
+temperature: 0.5
+max_tokens: 256
+
+
+
+#Generative Model params
+context_window: 1024
+num_output: 256
+chunk_overlap_ratio: 0
+separator: "\n"
